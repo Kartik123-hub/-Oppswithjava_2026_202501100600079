@@ -1,89 +1,57 @@
 package com.kiet.library.service;
 
 import com.kiet.library.model.Book;
+import com.kiet.library.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BookService {
 
-    // In-memory storage (no database, no Stream API)
-    private final List<Book> books = new ArrayList<>();
+    private final BookRepository repository;
 
-    public BookService() {
-        books.add(new Book(201, "Effective Java", "Joshua Bloch", "Programming", 2018, true));
-        books.add(new Book(202, "Head First Java", "Kathy Sierra", "Programming", 2005, true));
-        books.add(new Book(203, "Wings of Fire", "A.P.J. Abdul Kalam", "Autobiography", 1999, false));
-        books.add(new Book(204, "A Brief History of Time", "Stephen Hawking", "Science", 1988, true));
-        books.add(new Book(205, "Introduction to Algorithms", "Thomas H. Cormen", "Computer Science", 2022, true));
+    public BookService(BookRepository repository) {
+        this.repository = repository;
     }
 
     public List<Book> getAllBooks() {
-        return books;
+        return repository.findAll();
     }
 
-    // returns null if not found
-    public Book getBookById(int bookId) {
-        for (Book book : books) {
-            if (book.getBookId() == bookId) {
-                return book;
-            }
+    public Optional<Book> getBookById(int bookId) {
+        return repository.findById(bookId);
+    }
+
+    public Optional<Book> addBook(Book book) {
+        if (repository.existsById(book.getBookId())) {
+            return Optional.empty();
         }
-        return null;
+        return Optional.of(repository.save(book));
     }
 
-    // returns null if a book with the same ID already exists
-    public Book addBook(Book book) {
-        if (getBookById(book.getBookId()) != null) {
-            return null;
+    public Optional<Book> updateBook(int bookId, Book updatedBook) {
+        if (!repository.existsById(bookId)) {
+            return Optional.empty();
         }
-        books.add(book);
-        return book;
+        updatedBook.setBookId(bookId);
+        return Optional.of(repository.save(updatedBook));
     }
 
-    // returns null if the book does not exist
-    public Book updateBook(int bookId, Book updatedBook) {
-        Book existing = getBookById(bookId);
-        if (existing == null) {
-            return null;
-        }
-        existing.setTitle(updatedBook.getTitle());
-        existing.setAuthor(updatedBook.getAuthor());
-        existing.setCategory(updatedBook.getCategory());
-        existing.setPublicationYear(updatedBook.getPublicationYear());
-        existing.setAvailable(updatedBook.isAvailable());
-        return existing;
-    }
-
-    // returns true if deleted, false if not found
     public boolean deleteBook(int bookId) {
-        Book existing = getBookById(bookId);
-        if (existing == null) {
+        if (!repository.existsById(bookId)) {
             return false;
         }
-        books.remove(existing);
+        repository.deleteById(bookId);
         return true;
     }
 
     public List<Book> searchByCategory(String category) {
-        List<Book> result = new ArrayList<>();
-        for (Book book : books) {
-            if (book.getCategory() != null && book.getCategory().equalsIgnoreCase(category)) {
-                result.add(book);
-            }
-        }
-        return result;
+        return repository.findByCategoryIgnoreCase(category);
     }
 
     public List<Book> findPublishedFromYear(int fromYear) {
-        List<Book> result = new ArrayList<>();
-        for (Book book : books) {
-            if (book.getPublicationYear() >= fromYear) {
-                result.add(book);
-            }
-        }
-        return result;
+        return repository.findByPublicationYearGreaterThanEqual(fromYear);
     }
 }

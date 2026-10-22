@@ -2,7 +2,6 @@ package com.kiet.library.controller;
 
 import com.kiet.library.model.Book;
 import com.kiet.library.service.BookService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/books")
@@ -17,7 +17,6 @@ public class BookController {
 
     private final BookService bookService;
 
-    @Autowired
     public BookController(BookService bookService) {
         this.bookService = bookService;
     }
@@ -28,13 +27,11 @@ public class BookController {
         return ResponseEntity.status(status).body(body);
     }
 
-    // Q3: GET all books
     @GetMapping
     public List<Book> getAllBooks() {
         return bookService.getAllBooks();
     }
 
-    // Q6: search by category  ->  /books/search?category=Programming
     @GetMapping("/search")
     public ResponseEntity<?> searchByCategory(@RequestParam String category) {
         List<Book> result = bookService.searchByCategory(category);
@@ -44,7 +41,6 @@ public class BookController {
         return ResponseEntity.ok(result);
     }
 
-    // Q6: filter by year  ->  /books/published?fromYear=2018
     @GetMapping("/published")
     public ResponseEntity<?> findPublishedFromYear(@RequestParam int fromYear) {
         List<Book> result = bookService.findPublishedFromYear(fromYear);
@@ -54,37 +50,33 @@ public class BookController {
         return ResponseEntity.ok(result);
     }
 
-    // Q3: GET by ID
     @GetMapping("/{bookId}")
     public ResponseEntity<?> getBookById(@PathVariable int bookId) {
-        Book book = bookService.getBookById(bookId);
-        if (book == null) {
+        Optional<Book> book = bookService.getBookById(bookId);
+        if (book.isEmpty()) {
             return message(HttpStatus.NOT_FOUND, "Book not found");
         }
-        return ResponseEntity.ok(book);
+        return ResponseEntity.ok(book.get());
     }
 
-    // Q4: POST
     @PostMapping
     public ResponseEntity<?> addBook(@RequestBody Book book) {
-        Book added = bookService.addBook(book);
-        if (added == null) {
+        Optional<Book> added = bookService.addBook(book);
+        if (added.isEmpty()) {
             return message(HttpStatus.CONFLICT, "Book with this ID already exists");
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(added);
+        return ResponseEntity.status(HttpStatus.CREATED).body(added.get());
     }
 
-    // Q5: PUT
     @PutMapping("/{bookId}")
     public ResponseEntity<?> updateBook(@PathVariable int bookId, @RequestBody Book updatedBook) {
-        Book updated = bookService.updateBook(bookId, updatedBook);
-        if (updated == null) {
+        Optional<Book> updated = bookService.updateBook(bookId, updatedBook);
+        if (updated.isEmpty()) {
             return message(HttpStatus.NOT_FOUND, "Book not found");
         }
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(updated.get());
     }
 
-    // Q5: DELETE
     @DeleteMapping("/{bookId}")
     public ResponseEntity<?> deleteBook(@PathVariable int bookId) {
         if (bookService.deleteBook(bookId)) {

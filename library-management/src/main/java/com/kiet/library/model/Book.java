@@ -1,12 +1,31 @@
 package com.kiet.library.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "books")
 public class Book {
 
+    @Id
+    @Column(name = "book_id")
     private int bookId;
+
+    @Column(name = "title", nullable = false, length = 200)
     private String title;
+
+    @Column(name = "author", nullable = false, length = 150)
     private String author;
+
+    @Column(name = "category", nullable = false, length = 100)
     private String category;
+
+    @Column(name = "publication_year", nullable = false)
     private int publicationYear;
+
+    @Column(name = "available", nullable = false)
     private boolean available;
 
     public Book() {
